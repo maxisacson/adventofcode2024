@@ -1,2 +1,4 @@
 day*.txt
 .env
+lib*.so
+*.o
