@@ -75,17 +75,43 @@ def run():
 
 
 def fix_line(line, rules):
-    return 0
-    forbidden = set()
+    # pp.pprint(rules)
+    indices = {}
     n = line.split(',')
-    middle = n[len(n)//2]
+    bad = [False] * len(n)
+
+    forbidden = set()
     for i,b in enumerate(n):
+        indices[b] = i
         if b in forbidden:
-            return False, middle
+            bad[i] = True
         if b in rules:
             a = rules[b]
             forbidden = forbidden.union(set(a))
-    return True, middle
+
+    if not any(bad):
+        return n[len(n)//2]
+
+    # print(line)
+    copy = n.copy()
+    for i,a in enumerate(n):
+        if not bad[i]:
+            continue
+
+        for j,b in enumerate(n):
+            if a == b:
+                break
+            if b not in rules:
+                continue
+            rule = rules[b]
+            if a in rule:
+                # print(j, a, b)
+                copy.insert(j,a)
+                # print(",".join(copy))
+                copy.pop(i+1)
+                # print(",".join(copy))
+                # print()
+                return fix_line(",".join(copy), rules)
 
 
 def run2():
@@ -93,8 +119,7 @@ def run2():
     read_rules = True
     sum = 0
     with open("day5.txt") as f:
-        #     for line in f:
-        for line in test_input.split('\n'):
+        for line in f:
             if read_rules:
                 if len(line) <= 1:
                     read_rules = False
@@ -111,10 +136,10 @@ def run2():
                 ok, _ = check_line(line, rules)
                 if not ok:
                     p = fix_line(line, rules)
-                    sum += p
+                    sum += int(p)
 
     print(sum)
 
 
-# run()
+run()
 run2()
