@@ -10,6 +10,14 @@ pub fn readFile(filename: []const u8) ![]const u8 {
     return text;
 }
 
+pub fn readFile2(filename: []const u8, allocator: Allocator) ![]const u8 {
+    const cwd = std.fs.cwd();
+    const file = try cwd.openFile(filename, .{});
+    defer file.close();
+    const text = try file.readToEndAlloc(allocator, std.math.maxInt(usize));
+    return text;
+}
+
 pub fn toSlice(comptime T: type, input: []const u8, sep: []const u8, allocator: Allocator) ![]T {
     var list = std.ArrayList(T).init(allocator);
     defer list.deinit();
