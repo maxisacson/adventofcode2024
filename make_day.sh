@@ -25,11 +25,15 @@ const test_input = "";
 
 fn run(input: []const u8, alloc: Allocator) !u64 {
     const lines = try utils.splitLines(input, alloc);
+    defer alloc.free(lines);
+
     return @intCast(lines.len);
 }
 
 fn run2(input: []const u8, alloc: Allocator) !u64 {
     const lines = try utils.splitLines(input, alloc);
+    defer alloc.free(lines);
+
     return @intCast(lines.len);
 }
 
