@@ -52,3 +52,5 @@ test "${day}" {
     try testing.expectEqual(0, try run2(test_input, testing.allocator));
 }
 EOF
+
+./get_input.sh $1
