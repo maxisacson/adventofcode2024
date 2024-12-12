@@ -1,4 +1,3 @@
-
 test_input = """\
 RRRRIICCFF
 RRRRIICCCF
@@ -49,22 +48,6 @@ def fill(grid, row, col, visited):
     return region
 
 
-def on_edge(grid, row, col):
-    bounds = Bounds(grid)
-
-    nbrs = [(row, col + 1),
-            (row + 1, col),
-            (row, col - 1),
-            (row - 1, col)]
-
-    kind = grid[row][col]
-    for p, q in nbrs:
-        if not bounds.inside(p, q) or grid[p][q] != kind:
-            return True
-
-    return False
-
-
 def perimiter(grid, region):
     i0, j0 = region[0]
     kind = grid[i0][j0]
@@ -99,24 +82,36 @@ def bottom_right(region):
     return bottom, right
 
 
-def get_contig_row(row, grid, region):
-    c = 0
-    length = len(grid[row])
-    while c < length and grid[row][c] not in region:
-        c += 1
+def count_fence(start, grid, region, peek, stride):
+    r, c = start
+    pr, pc = peek
+    sr, sc = stride
 
-    assert c < length
+    rows = len(grid)
+    cols = len(grid[0])
+
+    while r < rows and c < cols and (r, c) not in region:
+        r += sr
+        c += sc
+
+    assert r < rows
+    assert c < cols
 
     bounds = Bounds(grid)
 
     same = False
-    while c < length:
-        if grid[row][c] in region and (not bounds.inside(row-1, c) or grid[row-1][c] not in region):
+    count = 0
+    while r < rows and c < cols:
+        if (r, c) in region and (not bounds.inside(r + pr, c + pc) or (r + pr, c + pc) not in region):
             if not same:
-               same = True
+                count += 1
+                same = True
         else:
             same = False
-        c += 1
+        r += sr
+        c += sc
+
+    return count
 
 
 def sides(grid, region):
@@ -124,12 +119,16 @@ def sides(grid, region):
     bottom, right = bottom_right(region)
 
     rs = set(region)
-    # for row in range(top, bottom+1):
-    #     for col in range(left, right+1):
-    #         if (row, col) not in rs:
-    #             continue
+    total = 0
     for row in range(top, bottom+1):
-        r = get_contig_row(row, grid, rs)
+        total += count_fence((row, 0), grid, rs, peek=(-1, 0), stride=(0, 1))
+        total += count_fence((row, 0), grid, rs, peek=(1, 0), stride=(0, 1))
+
+    for col in range(left, right+1):
+        total += count_fence((0, col), grid, rs, peek=(0, -1), stride=(1, 0))
+        total += count_fence((0, col), grid, rs, peek=(0, 1), stride=(1, 0))
+
+    return total
 
 
 def run(input):
@@ -154,10 +153,10 @@ def run(input):
         total += price
 
     print(total)
+    return total
 
 
 def run2(input):
-    print(input)
     grid = input.splitlines()
 
     rows = len(grid)
@@ -178,16 +177,17 @@ def run2(input):
         area = len(region)
         s = sides(grid, region)
         price = area * s
-        print(f"{area} * {s} = {price}")
         total += price
 
     print(total)
+    return total
 
 
 if __name__ == "__main__":
-    # run(test_input)
-    # with open("day12.txt") as f:
-    #     input = f.read()
-    # run(input)
+    assert run(test_input) == 1930
+    assert run2(test_input) == 1206
+    with open("day12.txt") as f:
+        input = f.read()
 
-    run2(test_input)
+    run(input)
+    run2(input)
