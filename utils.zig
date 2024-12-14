@@ -116,6 +116,10 @@ pub const GridMap = struct {
         const col = index % @as(usize, @intCast(self.cols));
         return @intCast(col);
     }
+
+    pub fn reset(self: *GridMap, elem: u8) void {
+        @memset(self.data, elem);
+    }
 };
 
 pub fn createGridMap(lines: [][]const u8, alloc: Allocator) !GridMap {
