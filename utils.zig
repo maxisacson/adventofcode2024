@@ -117,8 +117,24 @@ pub const GridMap = struct {
         return @intCast(col);
     }
 
+    pub fn toPos(self: *const GridMap, index: usize) GridMapError![2]i64 {
+        const row = try self.toRow(index);
+        const col = try self.toCol(index);
+        return .{ row, col };
+    }
+
     pub fn reset(self: *GridMap, elem: u8) void {
         @memset(self.data, elem);
+    }
+
+    pub fn copy(self: *const GridMap, alloc: Allocator) Allocator.Error!GridMap {
+        const data = try alloc.alloc(u8, self.data.len);
+        std.mem.copyForwards(u8, data, self.data);
+        return GridMap{
+            .rows = self.rows,
+            .cols = self.cols,
+            .data = data,
+        };
     }
 };
 
