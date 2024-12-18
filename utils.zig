@@ -156,3 +156,11 @@ pub fn createGridMap(lines: [][]const u8, alloc: Allocator) !GridMap {
         .data = data,
     };
 }
+
+pub fn createEmptyGridMap(rows: usize, cols: usize, alloc: Allocator) !GridMap {
+    return GridMap{
+        .rows = @intCast(rows),
+        .cols = @intCast(cols),
+        .data = try alloc.alloc(u8, rows * cols),
+    };
+}
