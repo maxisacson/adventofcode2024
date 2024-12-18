@@ -73,7 +73,7 @@ const test_input5 =
 // 16 + 11000
 // 18 + 3000
 
-fn findPathDijkstra(map: utils.GridMap, start: usize, alloc: Allocator) !u64 {
+fn findPathDijkstra(map: utils.GridMap, start: usize, end: usize, alloc: Allocator) !u64 {
     var cost = try alloc.alloc(u64, map.data.len);
     defer alloc.free(cost);
     @memset(cost, std.math.maxInt(u64));
@@ -94,20 +94,20 @@ fn findPathDijkstra(map: utils.GridMap, start: usize, alloc: Allocator) !u64 {
 
     while (true) {
         const curr = blk: {
-            var k_min: usize = 0;
+            var k_min: ?usize = null;
             for (0..map.data.len) |k| {
                 if (visited[k]) {
                     continue;
                 }
-                if (cost[k] < cost[k_min]) {
+                if (k_min == null or cost[k] < cost[k_min.?]) {
                     k_min = k;
                 }
             }
-            break :blk k_min;
+            break :blk k_min.?;
         };
         visited[curr] = true;
 
-        if (map.data[curr] == 'E') {
+        if (curr == end) {
             var i = curr;
             var path_map = try map.copy(alloc);
             defer alloc.free(path_map.data);
@@ -146,14 +146,14 @@ fn findPathDijkstra(map: utils.GridMap, start: usize, alloc: Allocator) !u64 {
             // return curr_cost;
         }
 
-        // const pos = try map.toPos(curr);
-        // const nbrs = [_][2]i64{
-        //     .{ pos[0], pos[1] - 1 },
-        //     .{ pos[0] + 1, pos[1] },
-        //     .{ pos[0], pos[1] + 1 },
-        //     .{ pos[0] - 1, pos[1] },
-        // };
-        const nbrs = try getNeighbours(map, dir[curr], curr);
+        const pos = try map.toPos(curr);
+        const nbrs = [_][2]i64{
+            .{ pos[0], pos[1] - 1 },
+            .{ pos[0] + 1, pos[1] },
+            .{ pos[0], pos[1] + 1 },
+            .{ pos[0] - 1, pos[1] },
+        };
+        // const nbrs = try getNeighbours(map, dir[curr], curr);
 
         for (nbrs) |n| {
             if (!map.isValid(n[0], n[1])) {
@@ -202,7 +202,10 @@ fn getNeighbours(map: utils.GridMap, dir: u8, curr: usize) ![3][2]i64 {
             .{ row, col + 1 },
             .{ row + 1, col },
         },
-        else => unreachable,
+        else => {
+            print("dir:{d}\n", .{dir});
+            unreachable;
+        },
     };
 }
 
@@ -268,7 +271,15 @@ fn run(input: []const u8, alloc: Allocator) !u64 {
         unreachable;
     };
 
-    const minCost = try findPathDijkstra(map, start, alloc);
+    const end = for (map.data, 0..) |v, i| {
+        if (v == 'E') {
+            break i;
+        }
+    } else {
+        unreachable;
+    };
+
+    const minCost = try findPathDijkstra(map, start, end, alloc);
     return minCost;
 }
 
