@@ -61,12 +61,10 @@ class Wire:
         self.out = []
 
 
-def run(input):
-    lines = input.splitlines()
-    flag = True
-
+def make_wires(lines):
     wires = {}
 
+    flag = True
     for line in lines:
         if len(line) == 0:
             flag = False
@@ -96,6 +94,52 @@ def run(input):
             wires[o].in1 = i1
             wires[o].in2 = i2
 
+    return wires
+
+
+def reset_wires(wires, lines):
+    for _, w in wires.items():
+        w.value = None
+
+    for line in lines:
+        if len(line) == 0:
+            break
+
+        k, v = line.split(": ")
+        wires[k].value = int(v)
+
+
+def reset_wires2(wires, x, y):
+    for k, w in wires.items():
+        if k[0] in ['x', 'y']:
+            w.value = 0
+        else:
+            w.value = None
+
+    for k, w in wires.items():
+        if k[0] == 'x':
+            i = int(k[1:])
+            w.value |= (x & (1 << i))
+        if k[0] == 'y':
+            i = int(k[1:])
+            w.value |= (y & (1 << i))
+
+
+def check_wires(wires):
+    x = 0
+    y = 0
+    for k, w in wires.items():
+        if k[0] == 'x':
+            i = int(k[1:])
+            x |= (w.value << i)
+        if k[0] == 'y':
+            i = int(k[1:])
+            y |= (w.value << i)
+
+    print(f"{x=} {y=}")
+
+
+def run_wires(wires):
     done = False
     while not done:
         done = True
@@ -131,10 +175,33 @@ def run(input):
     return output
 
 
+def run(input):
+    lines = input.splitlines()
+
+    wires = make_wires(lines)
+    check_wires(wires)
+    output = run_wires(wires)
+
+    return output
+
+
+def run2(input):
+    lines = input.splitlines()
+
+    wires = make_wires(lines)
+    reset_wires2(wires, 0, 1)
+    out = run_wires(wires)
+    check_wires(wires)
+    print(out)
+    print(f"{out:b}")
+
+
 if __name__ == "__main__":
-    assert run(test_input) == 2024
+    # assert run(test_input) == 2024
 
-    with open('day24.txt') as f:
-        input = f.read()
+    run2(test_input)
 
-    print(run(input))
+    # with open('day24.txt') as f:
+    #     input = f.read()
+    #
+    # print(run(input))
