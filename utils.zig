@@ -164,3 +164,24 @@ pub fn createEmptyGridMap(rows: usize, cols: usize, alloc: Allocator) !GridMap {
         .data = try alloc.alloc(u8, rows * cols),
     };
 }
+
+pub fn Point(comptime T: type) type {
+    return struct {
+        x: T,
+        y: T,
+
+        pub fn sub(self: *const Point(T), other: Point(T)) Point(T) {
+            return Point(T){
+                .x = self.x - other.x,
+                .y = self.y - other.y,
+            };
+        }
+
+        pub fn add(self: *const Point(T), other: Point(T)) Point(T) {
+            return Point(T){
+                .x = self.x + other.x,
+                .y = self.y + other.y,
+            };
+        }
+    };
+}
