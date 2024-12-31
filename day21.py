@@ -103,10 +103,35 @@ def gen_dirpad_moves(seq):
     return moves
 
 
+def gen_dirpad_moves_rec(seq, depth):
+    if depth == 1:
+        current = 'A'
+        moves = []
+        for c in seq:
+            moves += gen_dirpad_moves_(current, c)
+            current = c
+
+        return moves
+
+    current = 'A'
+    moves = []
+    for c in seq:
+        moves += gen_dirpad_moves_(current, c)
+        current = c
+
+    return moves
+
+
 def gen_moves(code):
     moves = gen_numpad_moves(code)
     moves = gen_dirpad_moves(moves)
     moves = gen_dirpad_moves(moves)
+    return moves
+
+
+def gen_moves_n(code, n):
+    moves = gen_numpad_moves(code)
+    moves = gen_dirpad_moves_rec(moves, n)
     return moves
 
 
@@ -119,10 +144,21 @@ def run(input):
     return sum
 
 
+def run2(input, n):
+    sum = 0
+    for code in input.splitlines():
+        moves = gen_moves_n(code, n)
+        sum += len(moves) * int(code[:-1])
+
+    return sum
+
+
 if __name__ == "__main__":
     print(run(test_input))
+    print(run2(test_input, 2))
 
     with open('day21.txt') as f:
         input = f.read()
 
     print(run(input))
+    print(run2(input, 25))
