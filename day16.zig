@@ -73,6 +73,8 @@ const test_input5 =
 // 16 + 11000
 // 18 + 3000
 
+const start_dir = '>';
+
 fn findPathDijkstra(map: utils.GridMap, start: usize, end: usize, alloc: Allocator) !u64 {
     var cost = try alloc.alloc(u64, map.data.len);
     defer alloc.free(cost);
@@ -90,7 +92,7 @@ fn findPathDijkstra(map: utils.GridMap, start: usize, end: usize, alloc: Allocat
     var dir = try alloc.alloc(u8, map.data.len);
     defer alloc.free(dir);
     @memset(dir, 0);
-    dir[start] = '>';
+    dir[start] = start_dir;
 
     while (true) {
         const curr = blk: {
@@ -146,14 +148,14 @@ fn findPathDijkstra(map: utils.GridMap, start: usize, end: usize, alloc: Allocat
             // return curr_cost;
         }
 
-        const pos = try map.toPos(curr);
-        const nbrs = [_][2]i64{
-            .{ pos[0], pos[1] - 1 },
-            .{ pos[0] + 1, pos[1] },
-            .{ pos[0], pos[1] + 1 },
-            .{ pos[0] - 1, pos[1] },
-        };
-        // const nbrs = try getNeighbours(map, dir[curr], curr);
+        // const pos = try map.toPos(curr);
+        // const nbrs = [_][2]i64{
+        //     .{ pos[0], pos[1] - 1 },
+        //     .{ pos[0] + 1, pos[1] },
+        //     .{ pos[0], pos[1] + 1 },
+        //     .{ pos[0] - 1, pos[1] },
+        // };
+        const nbrs = try getNeighbours(map, dir[curr], curr);
 
         for (nbrs) |n| {
             if (!map.isValid(n[0], n[1])) {
@@ -209,9 +211,31 @@ fn getNeighbours(map: utils.GridMap, dir: u8, curr: usize) ![3][2]i64 {
     };
 }
 
+fn getNeighbours2(map: utils.GridMap, _: u8, curr: usize) ![3][2]i64 {
+    const row = try map.toRow(curr);
+    const col = try map.toCol(curr);
+
+    return [_][2]i64{
+        .{ row - 1, col },
+        .{ row, col - 1 },
+        .{ row + 1, col },
+        .{ row, col + 1 },
+
+        .{ row - 1, col + 1 },
+        .{ row - 1, col - 1 },
+        .{ row + 1, col + 1 },
+        .{ row + 1, col - 1 },
+
+        .{ row - 2, col },
+        .{ row, col - 2 },
+        .{ row + 2, col },
+        .{ row, col + 2 },
+    };
+}
+
 fn getCost(map: utils.GridMap, curr: usize, next: usize, prev: []i64, cost: []u64) !u64 {
     const curr_pos = try map.toPos(curr);
-    var curr_dir: u8 = '>';
+    var curr_dir: u8 = start_dir;
     if (prev[curr] != -1) {
         const prev_pos = try map.toPos(@intCast(prev[curr]));
         curr_dir = getDir(diff(curr_pos, prev_pos));
@@ -219,6 +243,37 @@ fn getCost(map: utils.GridMap, curr: usize, next: usize, prev: []i64, cost: []u6
 
     const next_pos = try map.toPos(next);
     const next_dir = getDir(diff(next_pos, curr_pos));
+
+    if (curr_dir != next_dir) {
+        return cost[curr] + 1001;
+    }
+    return cost[curr] + 1;
+}
+
+fn getCost2(map: utils.GridMap, curr: usize, next: usize, prev: []i64, cost: []u64) !u64 {
+    const curr_pos = try map.toPos(curr);
+    var curr_dir: u8 = start_dir;
+    if (prev[curr] != -1) {
+        const prev_pos = try map.toPos(@intCast(prev[curr]));
+        curr_dir = getDir(diff(curr_pos, prev_pos));
+    }
+
+    const next_pos = try map.toPos(next);
+    var next_dir = undefined;
+    const d = diff(next_pos, curr_pos);
+    if (d[0] == 0) {
+        if (d[1] < 0) {
+            next_dir = '<';
+        } else if (d[1] > 0) {
+            next_dir = '>';
+        } else unreachable;
+    } else if (d[1] == 0) {
+        if (d[0] < 0) {
+            next_dir = '^';
+        } else if (d[0] > 0) {
+            next_dir = 'v';
+        } else unreachable;
+    } else if (d[0] == 1 and d[1] == 1) {} else if (d[0] == -1 and d[1] == 1) {} else if (d[0] == 1 and d[1] == -1) {} else if (d[0] == -1 and d[1] == -1) {}
 
     if (curr_dir != next_dir) {
         return cost[curr] + 1001;
